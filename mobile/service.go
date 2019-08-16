@@ -17,10 +17,11 @@ const (
 
 var dnsCache = cache.NewDNSCache()
 
+var lwipWriter = core.NewLWIPStack()
+
 // StartService ...
 func StartService(fd int, proxy string, dns string) bool {
 	f := os.NewFile(uintptr(fd), "")
-	lwipWriter := core.NewLWIPStack()
 
 	core.RegisterTCPConnHandler(socks.NewTCPHandler("127.0.0.1", 1080))
 	core.RegisterUDPConnHandler(socks.NewUDPHandler("127.0.0.1", 1080, 120, dnsCache))
@@ -52,7 +53,7 @@ func StartService(fd int, proxy string, dns string) bool {
 			n, err = lwipWriter.Write(buf[:n])
 			if err != nil {
 				log.Println("write to stack failed,", err)
-				break
+				continue
 			}
 		}
 
@@ -65,5 +66,5 @@ func StartService(fd int, proxy string, dns string) bool {
 // StopService ...
 func StopService() {
 	ginterrupt = true
-	time.Sleep(10 * time.Second)
+	time.Sleep(4 * time.Second)
 }
