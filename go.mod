@@ -14,4 +14,5 @@ require (
 	github.com/eycorsican/go-tun2socks v1.16.2
 	github.com/miekg/dns v1.1.15
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
+	golang.org/x/text v0.3.0
 )

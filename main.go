@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	dnsCache := cache.NewSimpleDnsCache()
+	dnsCache := cache.NewDNSCache()
 	core.RegisterOutputFn(func(data []byte) (int, error) {
 		return 1, nil
 
