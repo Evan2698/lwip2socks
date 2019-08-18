@@ -1,6 +1,7 @@
 package mobile
 
 import (
+	"io"
 	"log"
 	"lwip2socks/common/dns/cache"
 	"lwip2socks/core"
@@ -9,54 +10,29 @@ import (
 	"time"
 )
 
-var ginterrupt bool
-
-const (
-	mtu = 1500
-)
-
 var dnsCache = cache.NewDNSCache()
 
 var lwipWriter = core.NewLWIPStack()
 
+var tun *os.File
+
 // StartService ...
 func StartService(fd int, proxy string, dns string) bool {
-	f := os.NewFile(uintptr(fd), "")
+	tun = os.NewFile(uintptr(fd), "")
 
 	core.RegisterTCPConnHandler(socks.NewTCPHandler("127.0.0.1", 1080))
 	core.RegisterUDPConnHandler(socks.NewUDPHandler("127.0.0.1", 1080, 120, dnsCache))
 
 	core.RegisterOutputFn(func(data []byte) (int, error) {
-		return f.Write(data)
+		return tun.Write(data)
 	})
 
-	ginterrupt = false
-
 	go func() {
-		buf := core.NewBytes(mtu)
-		defer func() {
-			core.FreeBytes(buf)
-			lwipWriter.Close()
-			f.Close()
-		}()
-		for {
-			if ginterrupt {
-				break
-			}
-
-			n, err := f.Read(buf)
-			if err != nil {
-				log.Println("read from tun failed,", err)
-				break
-			}
-
-			n, err = lwipWriter.Write(buf[:n])
-			if err != nil {
-				log.Println("write to stack failed,", err)
-				continue
-			}
+		n, err := io.Copy(lwipWriter, tun)
+		if err != nil {
+			log.Println("tun will exit!!!", err)
 		}
-
+		log.Println("log failed.", n)
 	}()
 
 	return true
@@ -65,6 +41,9 @@ func StartService(fd int, proxy string, dns string) bool {
 
 // StopService ...
 func StopService() {
-	ginterrupt = true
+	if tun != nil {
+		tun.Close()
+		tun = nil
+	}
 	time.Sleep(4 * time.Second)
 }
