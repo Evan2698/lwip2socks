@@ -13,6 +13,6 @@ replace golang.org/x/sys => github.com/golang/sys latest
 require (
 	github.com/eycorsican/go-tun2socks latest
 	github.com/miekg/dns latest
-	golang.org/x/net latest
+	golang.org/x/net 0.23.0
 	golang.org/x/text latest
 )
